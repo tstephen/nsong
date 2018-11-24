@@ -1,0 +1,21 @@
+main.container-fluid {
+  margin-top: 60px;
+}
+main ol {
+  -webkit-padding-start: 20px;
+}
+
+main .playing .slide {
+  border: solid 1px #6c757d; /* bootstrap secondary */
+  padding: .5rem;
+}
+
+main .playing .slide.current {
+  border: solid 1px #28a745; /* bootstrap success */
+  box-shadow: 0 0 0 0.2rem rgba(40,167,69,.25);
+}
+
+main .playing .slide.next {
+  border: solid 1px #17a2b8; /* bootstrap info */
+  box-shadow: 0 0 0 0.2rem rgba(23,162,184,.25);
+}
