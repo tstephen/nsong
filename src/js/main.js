@@ -5,7 +5,7 @@ var $s = (function () {
 
   me.fetchSongs = function() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'http://localhost:8081/data/songs.json');
+    xhr.open('GET', 'http://localhost:8085/data/songs.json');
     xhr.onload = function() {
       if (xhr.status === 200) {
         var json = JSON.parse(xhr.responseText);

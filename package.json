@@ -19,13 +19,10 @@
   "devDependencies": {
     "del": "^3.0.0",
     "gulp": "github:gulpjs/gulp#4.0",
-    "gulp-autoprefixer": "^4.1.0",
     "gulp-concat": "^2.6.1",
     "gulp-jshint": "^2.1.0",
-    "gulp-less": "^3.5.0",
     "gulp-minify-css": "^1.2.4",
     "gulp-replace": "^0.6.1",
-    "gulp-scp": "0.0.3",
     "gulp-scp2": "^0.2.0",
     "gulp-uglify": "^3.0.0",
     "gulp-zip": "^4.1.0",
@@ -33,6 +30,6 @@
     "workbox-build": "^3.3.1"
   },
   "dependencies": {
-    "bootstrap": "^4.1.1"
+    "bootstrap": "^4.1.3"
   }
 }

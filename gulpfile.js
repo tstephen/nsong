@@ -3,13 +3,20 @@ var gulp        = require('gulp');
 var jshint      = require('gulp-jshint');
 var uglify      = require('gulp-uglify');
 var concat      = require('gulp-concat');
-var less        = require('gulp-less');
+var log         = require('fancy-log');
 var minifyCSS   = require('gulp-minify-css');
-var prefix      = require('gulp-autoprefixer');
+var minimist    = require('minimist');
 var replace     = require('gulp-replace');
 var scp         = require('gulp-scp2');
+var through2    = require('through2');
 var workboxBuild = require('workbox-build');
 var zip         = require('gulp-zip');
+var vsn         = '0.0.1';
+
+var argv = minimist(process.argv.slice(2));
+var env = argv['env'] || 'dev';
+log.warn('ENVIRONMENT SET TO: '+env);
+var config = require('./config.js')[env];
 
 gulp.task('clean', function(done) {
   return del(['dist'], done);
@@ -24,9 +31,8 @@ gulp.task('scripts', function() {
   return gulp.src([
     'src/js/**/*.js'
   ])
-  /*.pipe(concat('main.min.js'))
-  .pipe(uglify())*/
-  .pipe(gulp.dest('dist/js'));
+  .pipe(config.js.uglify ? uglify({ mangle: true }) : through2.obj())
+  .pipe(gulp.dest('dist/'+vsn+'/js'));
 });
 
 gulp.task('test', function() {
@@ -43,12 +49,8 @@ gulp.task('styles', function() {
   return gulp.src([
     'src/css/**/*.css'
   ])
-  .pipe(gulp.dest('dist/css'));
-  /*return gulp.src('src/styles/main.less')
-    .pipe(less())
-    .pipe(minifyCSS())
-    .pipe(prefix())
-    .pipe(gulp.dest('dist/src/css'));*/
+  .pipe(config.css.minify ? minifyCSS() : through2.obj())
+  .pipe(gulp.dest('dist/'+vsn+'/css'));
 });
 
 gulp.task('compile',
@@ -65,16 +67,18 @@ gulp.task('gen-sw', function() {
   });
 });
 
-gulp.task('dev2prod', function() {
+gulp.task('fix-paths', function() {
   gulp.src([
       'src/**/*.html',
     ])
-    .pipe(replace('http://localhost:8083', 'https://api.knowprocess.com'))
+    .pipe(replace('/vsn/', '/'+vsn+'/'))
+    .pipe(replace('http://localhost:8085', config.apiServerUrl))
     .pipe(gulp.dest('dist'));
   return gulp.src([
       'src/public/*.html'
     ])
-    .pipe(replace('http://localhost:8083', 'https://api.knowprocess.com'))
+    .pipe(replace('/vsn/', '/'+vsn+'/'))
+    .pipe(replace('http://localhost:8085', config.apiServerUrl))
     .pipe(gulp.dest('dist/public'));
 });
 
@@ -85,18 +89,26 @@ gulp.task('package', () =>
 );
 
 gulp.task('install',
-  gulp.series('compile', 'assets', 'gen-sw', 'dev2prod', 'package')
+  gulp.series('compile', 'assets', 'gen-sw', 'fix-paths', 'package')
 );
 
-gulp.task('deploy', function() {
-  return gulp.src(['dist/**/*','!dist/archive.zip'])
-  .pipe(scp({
-    host: 'cloud.knowprocess.com',
-    username: 'tstephen',
-    privateKey: require('fs').readFileSync('/home/tstephen/.ssh/id_rsa'),
-    dest: '/var/www-cloud/'
-  }))
-  .on('error', function(err) {
-    console.log(err);
-  });
+gulp.task('_deploy', function() {
+  if (config.server != undefined) {
+    return gulp.src(['dist/**/*','!dist/archive.zip'])
+    .pipe(scp({
+      host: config.server.host,
+      username: config.server.usr,
+      privateKey: require('fs').readFileSync(config.server.privateKey),
+      dest: config.server.dir
+    }))
+    .on('error', function(err) {
+      console.log(err);
+    });
+  } else {
+    log.error('No config.server specified for '+env);
+  }
 });
+
+gulp.task('deploy',
+  gulp.series('install', '_deploy')
+);
